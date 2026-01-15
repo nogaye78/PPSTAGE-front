@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    /* On utilise ./assets/ pour pointer vers le dossier local */
+    /* On ajoute des guillemets car il y a des espaces dans le nom du fichier */
+    background-image: url('./assets/WhatsApp Image 2026-01-15 at 16.05.16.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    margin: 0;
+  }
+}
