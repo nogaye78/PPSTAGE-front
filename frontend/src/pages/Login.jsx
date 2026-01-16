@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const Login = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center  bg-gray-500/50 font-sans">
+    <div className="min-h-screen flex flex-col items-center justify-center  bg-gray-900/80 font-sans">
       <div className="flex items-center gap-2 mb-8">
         <div className="w-8 h-8 bg-white flex items-center justify-center rounded-sm text-[#45484b] font-bold">R</div>
         <span className="text-white font-bold text-xl uppercase tracking-tighter">Red Product</span>
