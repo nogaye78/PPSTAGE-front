@@ -4,7 +4,7 @@ import { LayoutDashboard, Hotel } from 'lucide-react';
 
 const Sidebar = () => {
   return (
-    <div className="w-64 h-screen bg-[#45484b] text-white flex flex-col fixed left-0 top-0 overflow-hidden z-30">
+    <div className="w-64 h-screen bg-gray-900/80 text-white flex flex-col fixed left-0 top-0 overflow-hidden z-30">
       <div className="p-6 flex items-center gap-2 mb-4">
         <div className="w-8 h-8 bg-white flex items-center justify-center rounded-sm">
            <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[15px] border-b-[#45484b]"></div>
