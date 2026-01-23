@@ -1,16 +1,19 @@
 import axios from "axios";
 
-// 1. Remplace l'URL ci-dessous par ton URL Render réelle
-const BASE_URL = "https://red-product-backend.onrender.com/api/"; 
+// L'URL de base contient déjà le préfixe API
+const BASE_URL = "https://red-product-backend-w5ko.onrender.com/api/"; 
 
 const API = axios.create({
   baseURL: BASE_URL,
 });
 
-// Intercepteur pour ajouter le token JWT automatiquement
 API.interceptors.request.use((req) => {
-  const token = localStorage.getItem("access");
-  if (token) {
+  const token = localStorage.getItem("access") || sessionStorage.getItem("access");
+  
+  // On ne joint pas le token pour login et register
+  const isAuthRoute = req.url.includes("login") || req.url.includes("register");
+
+  if (token && !isAuthRoute) {
     req.headers.Authorization = `Bearer ${token}`;
   }
   return req;

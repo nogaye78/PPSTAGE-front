@@ -1,15 +1,12 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
-  const [message, setMessage] = useState("");
+  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [status, setStatus] = useState({ type: "", message: "" });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -17,99 +14,53 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!acceptedTerms) {
-      setMessage("Veuillez accepter les termes et conditions ❗");
+      setStatus({ type: "error", message: "Veuillez accepter les termes ❗" });
       return;
     }
 
     try {
-      const res = await API.post("register/", formData);
-      setMessage("Inscription réussie 🎉 Vous pouvez vous connecter.");
-      console.log(res.data);
+      await API.post("register/", formData);
+      setStatus({ type: "success", message: "Inscription réussie 🎉 Redirection..." });
+      setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
-      console.error(error.response?.data || error.message);
-      setMessage("Erreur lors de l'inscription ❌ Vérifiez vos informations.");
+      setStatus({ type: "error", message: error.response?.data?.error || "Erreur d'inscription ❌" });
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900/80 font-sans">
-      <div className="flex items-center gap-2 mb-8">
-        <div className="w-8 h-8 bg-white flex items-center justify-center rounded-sm">
-          <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[15px] border-b-[#45484b]"></div>
-        </div>
-        <span className="text-white font-bold text-xl uppercase tracking-tighter">
-          Red Product
-        </span>
-      </div>
-
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900/80 font-sans px-4">
       <div className="bg-white p-10 rounded-sm shadow-xl w-full max-w-[420px]">
-        <h2 className="text-gray-700 text-md mb-8">
-          Inscrivez-vous en tant que Admin
-        </h2>
-
-        {message && (
-          <p className="mb-4 text-center text-sm text-red-600">{message}</p>
+        <h2 className="text-gray-700 text-lg mb-8 font-bold text-center border-b pb-4">Créer un compte Admin</h2>
+        
+        {status.message && (
+          <div className={`p-3 mb-6 rounded text-sm text-center font-bold ${
+            status.type === "success" ? "bg-green-100 text-green-700 border border-green-200" : "bg-red-100 text-red-700 border border-red-200"
+          }`}>
+            {status.message}
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <input
-            type="text"
-            name="username"
-            placeholder="Nom"
-            value={formData.username}
-            onChange={handleChange}
-            className="w-full border-b border-gray-200 pb-2 focus:outline-none"
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="E-mail"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full border-b border-gray-200 pb-2 focus:outline-none"
-            required
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Mot de passe"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full border-b border-gray-200 pb-2 focus:outline-none"
-            required
-          />
-
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <input type="text" name="username" placeholder="Nom d'utilisateur" onChange={handleChange} className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all" required />
+          <input type="email" name="email" placeholder="Email" onChange={handleChange} className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all" required />
+          <input type="password" name="password" placeholder="Mot de passe" onChange={handleChange} className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all" required />
+          
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={acceptedTerms}
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
-              className="w-4 h-4 border-gray-300 rounded"
-            />
-            <label htmlFor="terms" className="text-gray-600 text-sm">
-              Accepter les termes et la politique
-            </label>
+            <input type="checkbox" id="terms" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="cursor-pointer" />
+            <label htmlFor="terms" className="text-gray-600 text-sm cursor-pointer hover:text-black">Accepter les termes et conditions</label>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-[#45484b] text-white py-3 rounded-md font-medium"
-          >
+          <button type="submit" className="w-full bg-[#45484b] hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white py-3 rounded-md font-bold shadow-lg">
             S'inscrire
           </button>
         </form>
-      </div>
 
-      <p className="mt-6 text-white text-sm">
-        Vous avez déjà un compte?
-        <Link to="/login" className="text-yellow-500 font-bold ml-1">
-          Se connecter
-        </Link>
-      </p>
+        <p className="mt-8 text-center text-gray-600 text-sm">
+          Déjà un compte ? 
+          <Link to="/login" className="text-yellow-500 font-bold ml-2 hover:text-yellow-600 hover:underline">Se connecter</Link>
+        </p>
+      </div>
     </div>
   );
 };
