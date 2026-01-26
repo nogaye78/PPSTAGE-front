@@ -51,7 +51,7 @@ const HotelList = () => {
         />
 
         <div className="p-4 sm:p-6 md:p-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex flex-col sm:fle   x-row sm:justify-between sm:items-center gap-4 mb-6 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
             <div>
               <h2 className="text-lg sm:text-xl font-semibold">Hôtels</h2>
               <p className="text-sm text-gray-400">
@@ -137,13 +137,6 @@ const HotelList = () => {
           />
         )}
 
-        {/* À activer seulement si tu importes HotelDetailsModal */}
-        {/* {selectedHotel && (
-          <HotelDetailsModal
-            hotel={selectedHotel}
-            onClose={() => setSelectedHotel(null)}
-          />
-        )} */}
       </main>
     </div>
   );

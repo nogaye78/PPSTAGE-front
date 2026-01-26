@@ -1,7 +1,16 @@
 import React from 'react';
 import { Search, Bell, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = ({ title, searchTerm, onSearchChange, notificationCount }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Ici tu peux aussi supprimer le token, le localStorage, etc.
+    localStorage.removeItem("user"); // par exemple
+    navigate("/login"); // redirection vers page de connexion
+  };
+
   return (
     <nav className="h-16 bg-white border-b flex items-center justify-between px-8 sticky top-0 z-20">
       <h1 className="text-xl font-bold text-gray-800">{title}</h1>
@@ -36,7 +45,12 @@ const Navbar = ({ title, searchTerm, onSearchChange, notificationCount }) => {
             className="w-8 h-8 rounded-full border"
           />
 
-          <LogOut size={22} className="text-gray-600 cursor-pointer" />
+          {/* Bouton déconnexion */}
+          <LogOut 
+            size={22} 
+            className="text-gray-600 cursor-pointer" 
+            onClick={handleLogout} 
+          />
         </div>
       </div>
     </nav>
