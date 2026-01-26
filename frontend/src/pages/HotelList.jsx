@@ -22,7 +22,7 @@ const HotelList = () => {
 
   const addNewHotel = (newHotel) => {
     setHotels([newHotel, ...hotels]);
-    setNotifications(prev => prev + 1); // 🔔 Nouvelle notification
+    setNotifications(prev => prev + 1);
   };
 
   const updateHotel = (updatedHotel) => {
@@ -33,7 +33,6 @@ const HotelList = () => {
     setHotels(hotels.filter(h => h.id !== hotelId));
   };
 
-  // 🔍 Filtrage par nom OU ville
   const filteredHotels = hotels.filter(hotel =>
     hotel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     hotel.location.toLowerCase().includes(searchTerm.toLowerCase())
@@ -42,7 +41,8 @@ const HotelList = () => {
   return (
     <div className="flex min-h-screen bg-[#f0f2f5]">
       <Sidebar />
-      <main className="flex-1 ml-64">
+
+      <main className="flex-1 flex flex-col ml-0 md:ml-64">
         <Navbar
           title="Liste des hôtels"
           searchTerm={searchTerm}
@@ -50,22 +50,25 @@ const HotelList = () => {
           notificationCount={notifications}
         />
 
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+        <div className="p-4 sm:p-6 md:p-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
             <div>
-              <h2 className="text-xl font-semibold">Hôtels</h2>
-              <p className="text-sm text-gray-400">{filteredHotels.length} hôtel(s)</p>
+              <h2 className="text-lg sm:text-xl font-semibold">Hôtels</h2>
+              <p className="text-sm text-gray-400">
+                {filteredHotels.length} hôtel(s)
+              </p>
             </div>
+
             <button 
               onClick={() => { setEditingHotel(null); setIsModalOpen(true); }}
-              className="flex items-center gap-2 px-5 py-2 bg-transparent border border-black text-black rounded-lg hover:bg-gray-50 font-medium transition-all"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2 border border-black text-black rounded-lg hover:bg-gray-50 font-medium transition-all"
             >
               <span className="text-xl">+</span> Créer un nouveau hôtel
             </button>
           </div>
 
           {filteredHotels.length === 0 ? (
-            <div className="text-center py-24 text-gray-400 border-2 border-dashed rounded-2xl bg-white">
+            <div className="text-center py-20 sm:py-24 text-gray-400 border-2 border-dashed rounded-2xl bg-white">
               Aucun hôtel trouvé.
               {searchTerm && (
                 <button
@@ -77,7 +80,7 @@ const HotelList = () => {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-7">
               {filteredHotels.map((hotel) => (
                 <div 
                   key={hotel.id} 
@@ -87,11 +90,10 @@ const HotelList = () => {
                     <img 
                       src={hotel.image} 
                       alt={hotel.name} 
-                      className="w-full h-44 object-cover cursor-pointer"
+                      className="w-full h-40 sm:h-44 object-cover cursor-pointer"
                       onClick={() => setSelectedHotel(hotel)}
                     />
 
-                    {/* Boutons visibles au hover */}
                     <div className="absolute inset-0 flex items-start justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/10">
                       <div className="flex gap-2">
                         <button 
@@ -114,7 +116,7 @@ const HotelList = () => {
                     <p className="text-[10px] text-orange-600 font-bold uppercase tracking-tight mb-1 truncate">
                       {hotel.location}
                     </p>
-                    <h3 className="font-bold text-gray-800 text-lg mb-1 truncate">
+                    <h3 className="font-bold text-gray-800 text-base sm:text-lg mb-1 truncate">
                       {hotel.name}
                     </h3>
                     <p className="text-sm text-gray-700 font-medium">
@@ -135,12 +137,13 @@ const HotelList = () => {
           />
         )}
 
-        {selectedHotel && (
+        {/* À activer seulement si tu importes HotelDetailsModal */}
+        {/* {selectedHotel && (
           <HotelDetailsModal
             hotel={selectedHotel}
             onClose={() => setSelectedHotel(null)}
           />
-        )}
+        )} */}
       </main>
     </div>
   );
