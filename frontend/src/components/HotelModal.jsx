@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import API from '../api/axios'; // 👈 Assure-toi que le chemin vers ton fichier API.js est correct
+import API from '../services/api'; // 👈 Assure-toi que le chemin vers ton fichier API.js est correct
 
 const HotelModal = ({ onClose, onAddHotel }) => {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
     email: '',
-    phone: '',
     price: '',
     currency: 'F XOF',
     image: null
