@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import API from '../api/axios'; // 👈 Assure-toi que le chemin vers ton fichier API.js est correct
 
 const HotelModal = ({ onClose, onAddHotel }) => {
   const [formData, setFormData] = useState({
@@ -11,24 +11,40 @@ const HotelModal = ({ onClose, onAddHotel }) => {
     currency: 'F XOF',
     image: null
   });
-  const [preview, setPreview] = useState(null); // Pour affichage avant upload
+  
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData({ ...formData, image: file });
-      setPreview(URL.createObjectURL(file));
+      if (file.size > 5 * 1024 * 1024) {
+        setError("L'image ne doit pas dépasser 5 MB");
+        return;
+      }
+      setFormData(prev => ({ ...prev, image: file }));
+      setPreview(URL.createObjectURL(file)); // Pour afficher la miniature
+      setError(null);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.image) return alert("Veuillez remplir le nom et ajouter une photo");
+    setError(null);
+
+    // Validation
+    if (!formData.name.trim()) return setError("Le nom est requis");
+    if (!formData.image) return setError("L'image est requise");
 
     setLoading(true);
 
-    // Préparer FormData pour le backend
+    // Préparation des données
     const data = new FormData();
     data.append('name', formData.name);
     data.append('location', formData.address);
@@ -39,63 +55,70 @@ const HotelModal = ({ onClose, onAddHotel }) => {
     data.append('image', formData.image);
 
     try {
-      const res = await fetch('http://localhost:8000/api/hotels/', {
-        method: 'POST',
-        body: data
-      });
+      // ✅ On utilise l'instance Axios API.js
+      // L'URL sera automatiquement : https://red-product-backend-w5ko.onrender.com/api/hotels/
+      // Le Token JWT sera ajouté automatiquement par l'intercepteur de API.js
+      const response = await API.post('hotels/', data);
 
-      if (!res.ok) throw new Error('Erreur lors de l’upload');
-
-      const hotel = await res.json(); // le backend renvoie l'objet avec image.url Cloudinary
-      onAddHotel(hotel);
+      onAddHotel(response.data);
       onClose();
     } catch (err) {
-      console.error(err);
-      alert("Erreur lors de l'enregistrement de l'hôtel.");
+      console.error("Erreur Backend:", err.response?.data);
+      
+      // Gestion des erreurs spécifiques
+      if (err.response?.status === 401) {
+        setError("Session expirée ou non autorisée. Veuillez vous reconnecter.");
+      } else {
+        setError(err.response?.data?.detail || "Une erreur est survenue lors de l'enregistrement.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden">
-        <div className="p-5 border-b border-dashed flex items-center gap-4">
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full"><ArrowLeft size={20} /></button>
-          <h2 className="uppercase font-bold text-gray-700 text-sm tracking-widest">Créer un nouveau hôtel</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="bg-white w-full max-w-2xl rounded-xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        
+        <div className="p-4 border-b">
+          <h2 className="text-xl font-bold text-gray-800">Ajouter un nouvel hôtel</h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          <div className="grid grid-cols-2 gap-6">
-            <input type="text" placeholder="Nom de l'hôtel" className="p-2 border rounded-lg" onChange={e => setFormData({...formData, name: e.target.value})} />
-            <input type="text" placeholder="Adresse" className="p-2 border rounded-lg" onChange={e => setFormData({...formData, address: e.target.value})} />
-            <input type="email" placeholder="E-mail" className="p-2 border rounded-lg" onChange={e => setFormData({...formData, email: e.target.value})} />
-            <input type="text" placeholder="Téléphone" className="p-2 border rounded-lg" onChange={e => setFormData({...formData, phone: e.target.value})} />
-            <input type="text" placeholder="Prix par nuit" className="p-2 border rounded-lg" onChange={e => setFormData({...formData, price: e.target.value})} />
-            <select className="p-2 border rounded-lg bg-white" onChange={e => setFormData({...formData, currency: e.target.value})}>
-              <option>F XOF</option>
-              <option>USD ($)</option>
+        {error && (
+          <div className="mx-6 mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input name="name" type="text" placeholder="Nom de l'hôtel *" className="p-2 border rounded" onChange={handleInputChange} required />
+            <input name="address" type="text" placeholder="Adresse" className="p-2 border rounded" onChange={handleInputChange} />
+            <input name="email" type="email" placeholder="Email" className="p-2 border rounded" onChange={handleInputChange} />
+            <input name="phone" type="text" placeholder="Téléphone" className="p-2 border rounded" onChange={handleInputChange} />
+            <input name="price" type="number" placeholder="Prix par nuit" className="p-2 border rounded" onChange={handleInputChange} />
+            <select name="currency" className="p-2 border rounded" onChange={handleInputChange} value={formData.currency}>
+              <option value="F XOF">F XOF</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
             </select>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-600">Ajouter une photo</label>
-            <label className="border-2 border-dashed border-gray-200 rounded-xl py-10 flex flex-col items-center justify-center bg-gray-50 cursor-pointer hover:bg-gray-100 relative overflow-hidden">
-              {preview ? (
-                <img src={preview} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
-              ) : (
-                <>
-                  <ImageIcon size={40} className="text-gray-300 mb-2" />
-                  <span className="text-gray-400">Cliquez pour parcourir vos fichiers</span>
-                </>
-              )}
-              <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
-            </label>
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
+            {preview ? (
+              <img src={preview} alt="Preview" className="h-32 w-full object-contain mb-2" />
+            ) : (
+              <p className="text-gray-500 text-sm">Cliquez pour ajouter une photo</p>
+            )}
+            <input type="file" accept="image/*" onChange={handleImageChange} className="mt-2 text-sm" />
           </div>
 
-          <div className="flex justify-end">
-            <button type="submit" className="bg-[#555] text-white px-10 py-2.5 rounded-lg hover:bg-black transition-colors font-medium">
-              {loading ? 'Enregistrement...' : 'Enregistrer'}
+          <div className="flex justify-end gap-3 pt-4">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-100" disabled={loading}>
+              Annuler
+            </button>
+            <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300" disabled={loading}>
+              {loading ? 'Envoi en cours...' : 'Enregistrer'}
             </button>
           </div>
         </form>
