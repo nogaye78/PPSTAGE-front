@@ -1,29 +1,42 @@
-import axios from "axios";
+import axios from 'axios';
 
-// ✅ Utilise import.meta.env si tu es sur Vite, sinon garde la chaîne brute.
-// ✅ On s'assure qu'il n'y a pas de slash à la fin pour éviter les erreurs 404.
-const BASE_URL = import.meta.env?.VITE_API_URL || "https://red-product-backend-w5ko.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://red-product-backend-w5ko.onrender.com/api';
 
-const API = axios.create({
-  baseURL: BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 10000,
 });
 
-API.interceptors.request.use((req) => {
-  // ✅ On récupère le token 'access' comme prévu
-  const token = localStorage.getItem("access");
-  
-  // ✅ Vérification des routes publiques
-  const isAuthRoute = req.url.includes("login") || req.url.includes("register");
-
-  if (token && !isAuthRoute) {
-    req.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  return req;
-}, (error) => {
-  return Promise.reject(error);
+  return config;
 });
 
-export default API;
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const refreshToken = localStorage.getItem('refresh');
+        const response = await axios.post(`${API_BASE_URL}/token/refresh/`, { refresh: refreshToken });
+        const newAccessToken = response.data.access;
+        localStorage.setItem('access', newAccessToken);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
+      } catch (err) {
+        localStorage.clear();
+        window.location.href = '/login';
+        return Promise.reject(err);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
