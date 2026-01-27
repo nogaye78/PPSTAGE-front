@@ -1,94 +1,105 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import API from "../services/api";
-import { Eye, EyeOff } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import API from '../services/api';
 
-const Login = () => {
-  const [formData, setFormData] = useState({ username: "", password: "" });
-  const [status, setStatus] = useState({ type: "", message: "" });
-  const [showPassword, setShowPassword] = useState(false);
+function Login() {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
-      const res = await API.post("login/", formData);
-      localStorage.setItem("access", res.data.access);
-      setStatus({ type: "success", message: "Connexion réussie ✅ Bienvenue !" });
-      setTimeout(() => navigate("/dashboard"), 1000);
-    } catch (error) {
-      setStatus({ type: "error", message: "Identifiants incorrects ou route introuvable ❌" });
+      // ✅ Appel à /api/hotels/login/
+      const response = await API.post('login/', formData);
+      
+      console.log('✅ Connexion réussie:', response.data);
+      
+      // Sauvegarder les infos utilisateur si nécessaire
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Redirection
+      navigate('/dashboard');
+      
+    } catch (err) {
+      console.error('❌ Erreur login:', err);
+      setError(
+        err.response?.data?.error || 
+        'Erreur de connexion. Vérifiez vos identifiants.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900/80 font-sans px-4">
-      <div className="bg-white p-10 rounded-sm shadow-xl w-full max-w-[420px]">
-        <h2 className="text-gray-700 text-lg mb-8 font-bold text-center border-b pb-4">
-          Connexion Admin
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-6 text-center">Connexion</h2>
         
-        {status.message && (
-          <div className={`p-3 mb-6 rounded text-sm text-center font-bold ${
-            status.type === "success"
-              ? "bg-green-100 text-green-700 border border-green-200"
-              : "bg-red-100 text-red-700 border border-red-200"
-          }`}>
-            {status.message}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <input
-            type="text"
-            name="username"
-            placeholder="Nom d'utilisateur"
-            onChange={(e) => setFormData({...formData, username: e.target.value})}
-            className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
-            required
-          />
-
-          {/* Champ mot de passe avec bouton voir/masquer */}
-          <div className="relative">
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2">Username</label>
             <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Mot de passe"
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className="w-full border-b border-gray-300 pb-2 pr-10 focus:border-black outline-none transition-all"
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
           </div>
-          
+
+          <div className="mb-6">
+            <label className="block text-gray-700 mb-2">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
-            className="w-full bg-[#45484b] hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white py-3 rounded-md font-bold shadow-lg"
+            disabled={loading}
+            className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
           >
-            Se connecter
+            {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm space-y-2">
-          <Link to="/forgot-password" className="text-yellow-500 font-bold hover:underline block">
-            Mot de passe oublié ?
-          </Link>
-          <p className="text-gray-600">
-            Pas de compte ?
-            <Link to="/register" className="text-yellow-500 font-bold ml-2 hover:underline">
-              S'inscrire
-            </Link>
-          </p>
-        </div>
+        <p className="mt-4 text-center text-gray-600">
+          Pas de compte ?{' '}
+          <a href="/register" className="text-blue-500 hover:underline">
+            S'inscrire
+          </a>
+        </p>
       </div>
     </div>
   );
-};
+}
 
 export default Login;

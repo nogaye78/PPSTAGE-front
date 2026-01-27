@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 // Pages
 import Register from "./pages/Register";
 import Login from "./pages/Login";
-import ForgotPassword from "./pages/ForgotPassword";
+import ForgotPassword from "./pages/ForgotPassword/";
 import Dashboard from "./pages/Dashboard";
 import HotelList from "./pages/HotelList";
 

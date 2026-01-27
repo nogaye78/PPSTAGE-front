@@ -1,120 +1,142 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import API from "../services/api";
-import { Eye, EyeOff } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import API from '../services/api';
 
-const Register = () => {
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
-  const [status, setStatus] = useState({ type: "", message: "" });
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+function Register() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!acceptedTerms) {
-      setStatus({ type: "error", message: "Veuillez accepter les termes ❗" });
+    setLoading(true);
+    setError('');
+
+    // Vérifier que les mots de passe correspondent
+    if (formData.password !== formData.confirmPassword) {
+      setError('Les mots de passe ne correspondent pas');
+      setLoading(false);
       return;
     }
 
     try {
-      await API.post("register/", formData);
-      setStatus({ type: "success", message: "Inscription réussie 🎉 Redirection..." });
-      setTimeout(() => navigate("/login"), 1500);
-    } catch (error) {
-      setStatus({ type: "error", message: error.response?.data?.error || "Erreur d'inscription ❌" });
+      // ✅ Appel à /api/hotels/register/
+      const response = await API.post('register/', {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
+      });
+      
+      console.log('✅ Inscription réussie:', response.data);
+      
+      // Sauvegarder les infos utilisateur
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      
+      // Redirection
+      navigate('/dashboard');
+      
+    } catch (err) {
+      console.error('❌ Erreur inscription:', err);
+      setError(
+        err.response?.data?.error || 
+        'Erreur lors de l\'inscription.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900/80 font-sans px-4">
-      <div className="bg-white p-10 rounded-sm shadow-xl w-full max-w-[420px]">
-        <h2 className="text-gray-700 text-lg mb-8 font-bold text-center border-b pb-4">
-          Créer un compte Admin
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded-lg shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-6 text-center">Inscription</h2>
         
-        {status.message && (
-          <div className={`p-3 mb-6 rounded text-sm text-center font-bold ${
-            status.type === "success"
-              ? "bg-green-100 text-green-700 border border-green-200"
-              : "bg-red-100 text-red-700 border border-red-200"
-          }`}>
-            {status.message}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <input
-            type="text"
-            name="username"
-            placeholder="Nom d'utilisateur"
-            onChange={handleChange}
-            className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
-            required
-          />
-
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            onChange={handleChange}
-            className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
-            required
-          />
-
-          {/* Champ mot de passe avec bouton voir/masquer */}
-          <div className="relative">
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2">Username</label>
             <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Mot de passe"
+              type="text"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
-              className="w-full border-b border-gray-300 pb-2 pr-10 focus:border-black outline-none transition-all"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2">Email</label>
             <input
-              type="checkbox"
-              id="terms"
-              checked={acceptedTerms}
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
-              className="cursor-pointer"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
-            <label htmlFor="terms" className="text-gray-600 text-sm cursor-pointer hover:text-black">
-              Accepter les termes et conditions
-            </label>
           </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-gray-700 mb-2">Confirmer le password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
 
           <button
             type="submit"
-            className="w-full bg-[#45484b] hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white py-3 rounded-md font-bold shadow-lg"
+            disabled={loading}
+            className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400"
           >
-            S'inscrire
+            {loading ? 'Inscription...' : 'S\'inscrire'}
           </button>
         </form>
 
-        <p className="mt-8 text-center text-gray-600 text-sm">
-          Déjà un compte ?
-          <Link to="/login" className="text-yellow-500 font-bold ml-2 hover:text-yellow-600 hover:underline">
+        <p className="mt-4 text-center text-gray-600">
+          Déjà un compte ?{' '}
+          <a href="/login" className="text-blue-500 hover:underline">
             Se connecter
-          </Link>
+          </a>
         </p>
       </div>
     </div>
   );
-};
+}
 
 export default Register;
