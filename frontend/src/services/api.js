@@ -1,39 +1,26 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://red-product-backend-w5ko.onrender.com/api';
+// Détection automatique de l'environnement
+const API_BASE_URL = import.meta.env.PROD 
+  ? 'https://red-product-backend-w5ko.onrender.com'
+  : 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 10000,
+  withCredentials: true,  // ✅ Important pour les cookies/sessions
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,  // 10 secondes
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
+// Intercepteur pour gérer les erreurs globalement
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const refreshToken = localStorage.getItem('refresh');
-        const response = await axios.post(`${API_BASE_URL}/token/refresh/`, { refresh: refreshToken });
-        const newAccessToken = response.data.access;
-        localStorage.setItem('access', newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return api(originalRequest);
-      } catch (err) {
-        localStorage.clear();
-        window.location.href = '/login';
-        return Promise.reject(err);
-      }
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('Non authentifié - redirection nécessaire');
+      // Vous pouvez rediriger vers /login ici
     }
     return Promise.reject(error);
   }
