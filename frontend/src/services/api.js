@@ -1,16 +1,37 @@
-import axios from "axios";
+// utils/api.js ou votre fichier d'API
+import axios from 'axios';
 
-// ✅ AJOUT : Détection automatique de l'environnement
-const API_BASE_URL = import.meta.env.MODE === 'production'
-  ? 'https://red-product-backend-w5ko.onrender.com'
-  : 'http://localhost:8000';
-
-const API = axios.create({
-  baseURL: `${API_BASE_URL}/api/hotels/`,  // ✅ CORRIGÉ : /api/hotels/ au lieu de /api/auth/
+const api = axios.create({
+  baseURL: 'https://red-product-backend-w5ko.onrender.com',
+  withCredentials: true,  // ✅ Important pour les cookies
   headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true, // ✅ nécessaire si tu utilises des cookies
+    'Content-Type': 'application/json',
+  }
 });
 
-export default API;
+// ✅ Ajouter automatiquement le CSRF token à chaque requête
+api.interceptors.request.use((config) => {
+  // Récupérer le CSRF token depuis les cookies
+  const csrfToken = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('csrftoken='))
+    ?.split('=')[1];
+  
+  if (csrfToken) {
+    config.headers['X-CSRFToken'] = csrfToken;
+  }
+  
+  return config;
+});
+
+// Fonction de login
+export const login = async (credentials) => {
+  const response = await api.post('/api/hotels/login/', credentials);
+  return response.data;
+};
+
+// Fonction de register
+export const register = async (userData) => {
+  const response = await api.post('/api/hotels/register/', userData);
+  return response.data;
+};
