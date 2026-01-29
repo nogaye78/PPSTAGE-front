@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { authAPI } from "../services/auth";
 import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     password: "",
+    first_name: "",
+    last_name: "",
   });
   const [status, setStatus] = useState({ type: "", message: "" });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -25,13 +26,30 @@ const Register = () => {
     }
 
     try {
-      await API.post("register/", formData); // ✅ slash final obligatoire
-      setStatus({ type: "success", message: "Inscription réussie 🎉 Redirection..." });
+      const response = await authAPI.post("/auth/users/", {
+        email: formData.email,
+        password: formData.password,
+        re_password: formData.password,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+      });
+
+      console.log("✅ Inscription réussie:", response.data);
+      setStatus({
+        type: "success",
+        message: "Inscription réussie 🎉 Vous pouvez maintenant vous connecter.",
+      });
+
       setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
+      console.error("❌ Erreur d'inscription:", error.response || error);
       setStatus({
         type: "error",
-        message: error.response?.data?.error || "Erreur d'inscription ❌",
+        message:
+          error.response?.data?.email?.[0] ||
+          error.response?.data?.password?.[0] ||
+          error.response?.data?.non_field_errors?.[0] ||
+          "Erreur d'inscription ❌",
       });
     }
   };
@@ -58,25 +76,40 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <input
             type="text"
-            name="username"
-            placeholder="Nom d'utilisateur"
+            name="first_name"
+            placeholder="Prénom"
+            value={formData.first_name}
             onChange={handleChange}
             className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
             required
           />
+
+          <input
+            type="text"
+            name="last_name"
+            placeholder="Nom"
+            value={formData.last_name}
+            onChange={handleChange}
+            className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
+            required
+          />
+
           <input
             type="email"
             name="email"
             placeholder="Email"
+            value={formData.email}
             onChange={handleChange}
             className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
             required
           />
+
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Mot de passe"
+              value={formData.password}
               onChange={handleChange}
               className="w-full border-b border-gray-300 pb-2 pr-10 focus:border-black outline-none transition-all"
               required

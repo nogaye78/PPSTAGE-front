@@ -1,25 +1,36 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import API from "../services/api";
+import { authAPI } from "../services/auth";
 import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [status, setStatus] = useState({ type: "", message: "" });
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const res = await API.post("login/", formData); // ✅ slash final obligatoire
-      localStorage.setItem("access", res.data.token || res.data.access); // token selon backend
+      const res = await authAPI.post("/auth/jwt/create/", {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      localStorage.setItem("access", res.data.access);
+      localStorage.setItem("refresh", res.data.refresh);
+
       setStatus({ type: "success", message: "Connexion réussie ✅ Bienvenue !" });
       setTimeout(() => navigate("/dashboard"), 1000);
     } catch (error) {
+      console.error("❌ Erreur de connexion:", error.response || error);
       setStatus({
         type: "error",
-        message: "Identifiants incorrects ou route introuvable ❌",
+        message:
+          error.response?.data?.detail ||
+          error.response?.data?.non_field_errors?.[0] ||
+          "Email ou mot de passe incorrect ❌",
       });
     }
   };
@@ -45,11 +56,12 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <input
-            type="text"
-            name="username"
-            placeholder="Nom d'utilisateur"
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
             onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
+              setFormData({ ...formData, email: e.target.value })
             }
             className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
             required
@@ -60,6 +72,7 @@ const Login = () => {
               type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Mot de passe"
+              value={formData.password}
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
