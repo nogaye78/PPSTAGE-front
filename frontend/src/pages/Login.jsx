@@ -71,7 +71,7 @@ const Login = () => {
             <input
               type={showPassword ? "text" : "password"}
               name="password"
-              placeholder="Mot passe"
+              placeholder="Mot de passe"
               value={formData.password}
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
