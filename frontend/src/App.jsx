@@ -7,6 +7,8 @@ import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword/";
 import Dashboard from "./pages/Dashboard";
 import HotelList from "./pages/HotelList";
+import Activate from "./pages/Activate";
+
 
 function App() {
   return (
@@ -22,6 +24,7 @@ function App() {
         <Route path="/hotels" element={<HotelList />} />
 
         <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="/activate/:uid/:token" element={<Activate />} />
       </Routes>
     </Router>
   );

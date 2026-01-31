@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { authAPI } from "../services/auth";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -13,20 +13,32 @@ const Register = () => {
   const [status, setStatus] = useState({ type: "", message: "" });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!acceptedTerms) {
       setStatus({ type: "error", message: "Veuillez accepter les termes ❗" });
       return;
     }
 
+    if (formData.password.length < 8) {
+      setStatus({
+        type: "error",
+        message: "Le mot de passe doit contenir au moins 8 caractères ❗",
+      });
+      return;
+    }
+
     try {
-      const response = await authAPI.post("/auth/users/", {
+      setLoading(true);
+      setStatus({ type: "", message: "" });
+
+      await authAPI.post("/auth/users/", {
         email: formData.email,
         password: formData.password,
         re_password: formData.password,
@@ -34,13 +46,11 @@ const Register = () => {
         last_name: formData.last_name,
       });
 
-      console.log("✅ Inscription réussie:", response.data);
       setStatus({
         type: "success",
-        message: "Inscription réussie 🎉 Vous pouvez maintenant vous connecter.",
+        message:
+          "Inscription réussie 🎉 Un email d'activation a été envoyé à votre adresse.",
       });
-
-      setTimeout(() => navigate("/login"), 1500);
     } catch (error) {
       console.error("❌ Erreur d'inscription:", error.response || error);
       setStatus({
@@ -48,9 +58,13 @@ const Register = () => {
         message:
           error.response?.data?.email?.[0] ||
           error.response?.data?.password?.[0] ||
+          error.response?.data?.first_name?.[0] ||
+          error.response?.data?.last_name?.[0] ||
           error.response?.data?.non_field_errors?.[0] ||
           "Erreur d'inscription ❌",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -141,9 +155,16 @@ const Register = () => {
 
           <button
             type="submit"
-            className="w-full bg-[#45484b] hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white py-3 rounded-md font-bold shadow-lg"
+            disabled={loading}
+            className={`w-full bg-[#45484b] hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white py-3 rounded-md font-bold shadow-lg flex items-center justify-center ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
           >
-            S'inscrire
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              "S'inscrire"
+            )}
           </button>
         </form>
 
@@ -151,7 +172,7 @@ const Register = () => {
           Déjà un compte ?
           <Link
             to="/login"
-            className="text-yellow-500 font-bold ml-2 hover:text-yellow-600 hover:underline"
+            className="text-yellow-500 font-bold ml-2 hover:underline"
           >
             Se connecter
           </Link>

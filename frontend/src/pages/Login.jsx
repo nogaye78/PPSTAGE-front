@@ -7,31 +7,38 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [status, setStatus] = useState({ type: "", message: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    try {
-      const res = await authAPI.post("/auth/jwt/create/", {
-        email: formData.email,
-        password: formData.password,
+    if (!formData.email || !formData.password) {
+      setStatus({
+        type: "error",
+        message: "Veuillez remplir tous les champs ❗",
       });
+      return;
+    }
+    try {
+      setLoading(true);
+      setStatus({ type: "", message: "" });
 
+      const res = await authAPI.post("/auth/jwt/create/", formData);
       localStorage.setItem("access", res.data.access);
       localStorage.setItem("refresh", res.data.refresh);
 
-      setStatus({ type: "success", message: "Connexion réussie ✅ Bienvenue !" });
+      setStatus({ type: "success", message: "Connexion réussie ✅" });
       setTimeout(() => navigate("/dashboard"), 1000);
-    } catch (error) {
-      console.error("❌ Erreur de connexion:", error.response || error);
+    } catch (err) {
+      console.error("❌ Erreur de connexion:", err.response || err);
       setStatus({
         type: "error",
         message:
-          error.response?.data?.detail ||
-          error.response?.data?.non_field_errors?.[0] ||
+          err.response?.data?.detail ||
           "Email ou mot de passe incorrect ❌",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,13 +67,10 @@ const Login = () => {
             name="email"
             placeholder="Email"
             value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
             required
           />
-
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -90,9 +94,16 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-[#45484b] hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white py-3 rounded-md font-bold shadow-lg"
+            disabled={loading}
+            className={`w-full bg-[#45484b] hover:bg-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-white py-3 rounded-md font-bold shadow-lg flex items-center justify-center ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
           >
-            Se connecter
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              "Se connecter"
+            )}
           </button>
         </form>
 
