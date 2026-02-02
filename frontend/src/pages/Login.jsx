@@ -1,42 +1,38 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authAPI } from "../services/auth";
-import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [status, setStatus] = useState({ type: "", message: "" });
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.email || !formData.password) {
-      setStatus({
-        type: "error",
-        message: "Veuillez remplir tous les champs ❗",
-      });
-      return;
-    }
-    try {
-      setLoading(true);
-      setStatus({ type: "", message: "" });
+    setLoading(true);
+    setStatus({ type: "", message: "" });
 
-      const res = await authAPI.post("/auth/jwt/create/", formData);
-      localStorage.setItem("access", res.data.access);
-      localStorage.setItem("refresh", res.data.refresh);
+    try {
+      await authAPI.post("/auth/jwt/create/", {
+        email: formData.email,
+        password: formData.password,
+      });
 
       setStatus({ type: "success", message: "Connexion réussie ✅" });
-      setTimeout(() => navigate("/dashboard"), 1000);
-    } catch (err) {
-      console.error("❌ Erreur de connexion:", err.response || err);
-      setStatus({
-        type: "error",
-        message:
-          err.response?.data?.detail ||
-          "Email ou mot de passe incorrect ❌",
-      });
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Erreur connexion:", error.response || error);
+      const errMsg = error.response?.data?.non_field_errors?.[0] || "";
+
+      if (errMsg === "No active account found with the given credentials") {
+        setStatus({ type: "error", message: "Adresse email ou mot de passe incorrect ❌" });
+      } else {
+        setStatus({ type: "error", message: "Erreur lors de la connexion ❌" });
+      }
     } finally {
       setLoading(false);
     }
@@ -46,7 +42,7 @@ const Login = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900/80 font-sans px-4">
       <div className="bg-white p-10 rounded-sm shadow-xl w-full max-w-[420px]">
         <h2 className="text-gray-700 text-lg mb-8 font-bold text-center border-b pb-4">
-          Connexion Admin
+          Se connecter
         </h2>
 
         {status.message && (
@@ -67,30 +63,20 @@ const Login = () => {
             name="email"
             placeholder="Email"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={handleChange}
             className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
             required
           />
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder="Mot de passe"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              className="w-full border-b border-gray-300 pb-2 pr-10 focus:border-black outline-none transition-all"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
+
+          <input
+            type="password"
+            name="password"
+            placeholder="Mot de passe"
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full border-b border-gray-300 pb-2 focus:border-black outline-none transition-all"
+            required
+          />
 
           <button
             type="submit"
@@ -107,23 +93,15 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-sm space-y-2">
+        <p className="mt-4 text-center text-gray-600 text-sm">
+          Pas de compte ?
           <Link
-            to="/forgot-password"
-            className="text-yellow-500 font-bold hover:underline block"
+            to="/register"
+            className="text-yellow-500 font-bold ml-2 hover:underline"
           >
-            Mot de passe oublié ?
+            S'inscrire
           </Link>
-          <p className="text-gray-600">
-            Pas de compte ?
-            <Link
-              to="/register"
-              className="text-yellow-500 font-bold ml-2 hover:underline"
-            >
-              S'inscrire
-            </Link>
-          </p>
-        </div>
+        </p>
       </div>
     </div>
   );

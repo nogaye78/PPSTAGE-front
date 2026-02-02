@@ -49,20 +49,27 @@ const Register = () => {
       setStatus({
         type: "success",
         message:
-          "Inscription réussie 🎉 Un email d'activation a été envoyé à votre adresse.",
+          "✅ Inscription réussie ! Un email d'activation a été envoyé. Vérifiez votre boîte mail.",
       });
     } catch (error) {
       console.error("❌ Erreur d'inscription:", error.response || error);
-      setStatus({
-        type: "error",
-        message:
-          error.response?.data?.email?.[0] ||
-          error.response?.data?.password?.[0] ||
-          error.response?.data?.first_name?.[0] ||
-          error.response?.data?.last_name?.[0] ||
-          error.response?.data?.non_field_errors?.[0] ||
-          "Erreur d'inscription ❌",
-      });
+
+      // Messages friendly
+      const errMsg =
+        error.response?.data?.email?.[0] ||
+        error.response?.data?.password?.[0] ||
+        error.response?.data?.non_field_errors?.[0] ||
+        "Erreur d'inscription ❌";
+
+      let friendlyMsg = errMsg;
+
+      if (errMsg.includes("550 5.1.1")) {
+        friendlyMsg = "Adresse email incorrecte ❌";
+      } else if (errMsg.includes("already exists")) {
+        friendlyMsg = "Cet email est déjà utilisé ❌";
+      }
+
+      setStatus({ type: "error", message: friendlyMsg });
     } finally {
       setLoading(false);
     }
