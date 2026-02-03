@@ -9,7 +9,6 @@ import Dashboard from "./pages/Dashboard";
 import HotelList from "./pages/HotelList";
 import Activate from "./pages/Activate";
 
-
 function App() {
   return (
     <Router>
@@ -19,12 +18,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Pages protégées plus tard */}
+        {/* Pages protégées */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/hotels" element={<HotelList />} />
 
-        <Route path="*" element={<Navigate to="/login" />} />
+        {/* Activation compte */}
         <Route path="/activate/:uid/:token" element={<Activate />} />
+
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
   );

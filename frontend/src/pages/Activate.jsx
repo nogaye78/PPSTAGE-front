@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { authAPI } from "../services/auth";
+import { authAPI } from "../services/auth"; // axios instance
 
 const Activate = () => {
   const { uid, token } = useParams();
